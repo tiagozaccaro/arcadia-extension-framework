@@ -108,3 +108,9 @@ impl StoreManager {
         Ok(())
     }
 }
+
+impl Default for StoreManager {
+    fn default() -> Self {
+        Self::new()
+    }
+}

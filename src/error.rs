@@ -40,3 +40,44 @@ impl From<rusqlite::Error> for ExtensionError {
         ExtensionError::Database(e)
     }
 }
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::io;
+
+    #[test]
+    fn test_extension_error_from_io_error() {
+        let io_err = io::Error::new(io::ErrorKind::NotFound, "file not found");
+        let ext_err: ExtensionError = io_err.into();
+        match ext_err {
+            ExtensionError::Io(_) => {},
+            _ => panic!("Expected Io error"),
+        }
+    }
+
+    #[test]
+    fn test_extension_error_from_serde_json_error() {
+        let json_err = serde_json::from_str::<serde_json::Value>("invalid").unwrap_err();
+        let ext_err: ExtensionError = json_err.into();
+        match ext_err {
+            ExtensionError::Json(_) => {},
+            _ => panic!("Expected Json error"),
+        }
+    }
+
+    #[test]
+    fn test_extension_error_from_rusqlite_error() {
+        let db_err = rusqlite::Error::QueryReturnedNoRows;
+        let ext_err: ExtensionError = db_err.into();
+        match ext_err {
+            ExtensionError::Database(_) => {},
+            _ => panic!("Expected Database error"),
+        }
+    }
+
+    #[test]
+    fn test_extension_error_display() {
+        let err = ExtensionError::Validation("test message".to_string());
+        assert_eq!(format!("{}", err), "Validation error: test message");
+    }
+}
