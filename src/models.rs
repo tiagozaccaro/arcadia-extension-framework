@@ -1,7 +1,7 @@
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub enum ExtensionType {
     Theme,
     DataSource,
@@ -19,13 +19,14 @@ impl From<String> for ExtensionType {
     }
 }
 
-impl ToString for ExtensionType {
-    fn to_string(&self) -> String {
-        match self {
-            ExtensionType::Theme => "theme".to_string(),
-            ExtensionType::DataSource => "data_source".to_string(),
-            ExtensionType::GameLibrary => "game_library".to_string(),
-        }
+impl std::fmt::Display for ExtensionType {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let s = match self {
+            ExtensionType::Theme => "theme",
+            ExtensionType::DataSource => "data_source",
+            ExtensionType::GameLibrary => "game_library",
+        };
+        write!(f, "{}", s)
     }
 }
 
@@ -74,7 +75,7 @@ pub struct Extension {
     pub enabled: bool,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct ExtensionInfo {
     pub id: String,
     pub name: String,
@@ -97,4 +98,23 @@ pub struct ExtensionSetting {
     pub extension_id: String,
     pub key: String,
     pub value: Option<String>,
+}
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_extension_type_from_string() {
+        assert_eq!(ExtensionType::from("theme".to_string()), ExtensionType::Theme);
+        assert_eq!(ExtensionType::from("data_source".to_string()), ExtensionType::DataSource);
+        assert_eq!(ExtensionType::from("game_library".to_string()), ExtensionType::GameLibrary);
+        assert_eq!(ExtensionType::from("unknown".to_string()), ExtensionType::Theme); // default
+    }
+
+    #[test]
+    fn test_extension_type_to_string() {
+        assert_eq!(ExtensionType::Theme.to_string(), "theme");
+        assert_eq!(ExtensionType::DataSource.to_string(), "data_source");
+        assert_eq!(ExtensionType::GameLibrary.to_string(), "game_library");
+    }
 }

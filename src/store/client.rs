@@ -20,7 +20,7 @@ impl ExtensionStoreClient {
         println!("DEBUG: Fetching extensions from URL: {}", url);
 
         if let Some(ext_type) = &filters.extension_type {
-            url.push_str(&format!("&type={}", ext_type.to_string()));
+            url.push_str(&format!("&type={}", ext_type));
         }
         if let Some(tags) = &filters.tags {
             url.push_str(&format!("&tags={}", tags.join(",")));
@@ -86,5 +86,11 @@ impl ExtensionStoreClient {
             }
         }
         Ok(())
+    }
+}
+
+impl Default for ExtensionStoreClient {
+    fn default() -> Self {
+        Self::new()
     }
 }
