@@ -10,16 +10,17 @@ impl StoreManager {
     pub fn new() -> Self {
         let mut sources = HashMap::new();
 
-        // Add default official source
-        let official_source = StoreSource {
-            id: "official".to_string(),
-            name: "Official Arcadia Store".to_string(),
+        // Add default local source
+        let default_source = StoreSource {
+            id: "default".to_string(),
+            name: "Local Arcadia Store".to_string(),
             source_type: StoreSourceType::Official,
-            base_url: "https://api.arcadia-app.com/extensions".to_string(),
+            base_url: "https://github.com/tiagozaccaro/arcadia-app/blob/main/arcadia-store/store-manifest.json".to_string(),
             enabled: true,
             priority: 0,
         };
-        sources.insert(official_source.id.clone(), official_source);
+        eprintln!("DEBUG: Default store source URL: {}", default_source.base_url);
+        sources.insert(default_source.id.clone(), default_source);
 
         Self { sources }
     }
@@ -34,8 +35,8 @@ impl StoreManager {
     }
 
     pub fn remove_source(&mut self, id: &str) -> Result<(), StoreError> {
-        if id == "official" {
-            return Err(StoreError::Validation("Cannot remove official source".to_string()));
+        if id == "default" {
+            return Err(StoreError::Validation("Cannot remove default source".to_string()));
         }
         self.sources.remove(id);
         Ok(())
@@ -45,8 +46,8 @@ impl StoreManager {
         if !self.sources.contains_key(&source.id) {
             return Err(StoreError::Validation("Source not found".to_string()));
         }
-        if source.id == "official" && source.source_type != StoreSourceType::Official {
-            return Err(StoreError::Validation("Cannot change type of official source".to_string()));
+        if source.id == "default" && source.source_type != StoreSourceType::Official {
+            return Err(StoreError::Validation("Cannot change type of default source".to_string()));
         }
         self.validate_source(&source)?;
         self.sources.insert(source.id.clone(), source);
@@ -72,17 +73,19 @@ impl StoreManager {
             return Err(StoreError::Validation("Source name cannot be empty".to_string()));
         }
         if source.base_url.trim().is_empty() {
-            return Err(StoreError::Validation("Base URL cannot be empty".to_string()));
-        }
+            if !matches!(source.source_type, StoreSourceType::Official) {
+                return Err(StoreError::Validation("Base URL cannot be empty".to_string()));
+            }
+        } else {
+            // Validate URL format
+            if url::Url::parse(&source.base_url).is_err() {
+                return Err(StoreError::Validation("Invalid URL format".to_string()));
+            }
 
-        // Validate URL format
-        if url::Url::parse(&source.base_url).is_err() {
-            return Err(StoreError::Validation("Invalid URL format".to_string()));
-        }
-
-        // Security validations for custom sources
-        if matches!(source.source_type, StoreSourceType::Custom) {
-            self.validate_custom_url(&source.base_url)?;
+            // Security validations for custom sources
+            if matches!(source.source_type, StoreSourceType::Custom) {
+                self.validate_custom_url(&source.base_url)?;
+            }
         }
 
         Ok(())
