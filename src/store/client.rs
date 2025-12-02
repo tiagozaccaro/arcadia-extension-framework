@@ -17,6 +17,7 @@ impl ExtensionStoreClient {
 
     pub async fn fetch_extensions(&self, base_url: &str, filters: &StoreFilters, sort: &SortOption, page: u32, limit: u32) -> Result<Vec<StoreExtension>, StoreError> {
         let mut url = format!("{}/extensions?page={}&limit={}", base_url, page, limit);
+        println!("DEBUG: Fetching extensions from URL: {}", url);
 
         if let Some(ext_type) = &filters.extension_type {
             url.push_str(&format!("&type={}", ext_type.to_string()));
@@ -41,12 +42,14 @@ impl ExtensionStoreClient {
 
     pub async fn fetch_extension_details(&self, base_url: &str, id: &str) -> Result<StoreExtensionDetails, StoreError> {
         let url = format!("{}/extensions/{}", base_url, id);
+        println!("DEBUG: Fetching extension details from URL: {}", url);
         let response = self.client.get(&url).send().await?;
         let details: StoreExtensionDetails = response.json().await?;
         Ok(details)
     }
 
     pub async fn download_manifest(&self, manifest_url: &str) -> Result<ExtensionManifest, StoreError> {
+        println!("DEBUG: Downloading manifest from URL: {}", manifest_url);
         let response = self.client.get(manifest_url).send().await?;
         let manifest: ExtensionManifest = response.json().await?;
         self.validate_manifest_security(&manifest)?;
